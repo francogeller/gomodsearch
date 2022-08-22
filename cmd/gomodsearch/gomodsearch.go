@@ -2,7 +2,7 @@ package main
 
 import (
 	"fmt"
-	"github.com/francogeller/gomodsearch/internal/gomodsearch"
+	"github.com/francogeller/gomodsearch/internal/app/gomodsearch"
 	"os"
 	"strings"
 )
