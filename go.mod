@@ -1,3 +1,3 @@
-module github.com/frakaft/gomodsearch
+module github.com/francogeller/gomodsearch
 
 go 1.18

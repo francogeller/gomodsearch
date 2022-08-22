@@ -3,7 +3,7 @@ package main
 import (
 	"flag"
 	"fmt"
-	"github.com/frakaft/gomodsearch/internal/gomodsearch"
+	"github.com/francogeller/gomodsearch/internal/gomodsearch"
 	"os"
 )
 
