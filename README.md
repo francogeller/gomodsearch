@@ -11,7 +11,7 @@ go install github.com/francogeller/gomodsearch@latest
 ## Usage
 
 ```bash
-gomodsearch <path to go.mod directory> <module>[@version]
+gomodsearch <path> <module>[@version] ...
 ```
 
 ## License
