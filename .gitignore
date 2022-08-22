@@ -1,0 +1,11 @@
+# Builds
+main
+
+# DS_Store
+.DS_Store
+
+# GoLand
+.idea
+
+# VSCode
+.vscode
