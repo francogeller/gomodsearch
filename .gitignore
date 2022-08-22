@@ -1,5 +1,6 @@
 # Builds
-main
+gomodsearch
+bin
 
 # DS_Store
 .DS_Store
