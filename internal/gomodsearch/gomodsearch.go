@@ -4,8 +4,10 @@ import (
 	"bytes"
 	"errors"
 	"fmt"
+	"golang.org/x/mod/semver"
 	"os"
 	"os/exec"
+	"sort"
 	"strings"
 )
 
@@ -17,58 +19,67 @@ type Mod struct {
 	Parents            []*Mod
 }
 
-func Run(path *string, mod *string) error {
+func Run(path string, mods ...string) error {
 
 	// Print search params
-	fmt.Fprintf(os.Stdout, "\nMOD: %s\n", *mod)
-	fmt.Fprintf(os.Stdout, "PATH: %s\n\n", *path)
+	for _, mod := range mods {
 
-	// Load data
-	out, err := load(path)
-	if err != nil {
-		return err
-	}
+		// Load data
+		out, err := load(&path)
+		if err != nil {
+			return err
+		}
 
-	// Init map
-	modMap := make(map[string]*Mod)
-	verMap := make(map[string][]*Mod)
+		// Init map
+		modMap := make(map[string]*Mod)
+		verMap := make(map[string][]*Mod)
 
-	// Decode data
-	for _, row := range bytes.Split(out[:len(out)-1], []byte("\n")) {
-		lineSplit := bytes.Split(row, []byte(" "))
-		parent := string(lineSplit[0])
-		dep, depName, depVersion := decodeMod(&lineSplit[1])
-		isDirectDependency := isDirectDependency(&parent)
-		if existingMod, ok := modMap[dep]; ok {
-			existingMod.Parents = append(existingMod.Parents, modMap[parent])
-		} else {
-			newMod := &Mod{
-				FullName:           dep,
-				Name:               depName,
-				Version:            depVersion,
-				IsDirectDependency: isDirectDependency,
-				Parents:            []*Mod{},
-			}
-			modMap[dep] = newMod
-			if !isDirectDependency {
-				newMod.Parents = append(newMod.Parents, modMap[parent])
-			}
-			if _, ok := verMap[depName]; !ok {
-				verMap[depName] = []*Mod{newMod}
+		// Decode data
+		for _, row := range bytes.Split(out[:len(out)-1], []byte("\n")) {
+			lineSplit := bytes.Split(row, []byte(" "))
+			parent := string(lineSplit[0])
+			dep, depName, depVersion := decodeMod(&lineSplit[1])
+			isDirectDependency := isDirectDependency(&parent)
+			if existingMod, ok := modMap[dep]; ok {
+				existingMod.Parents = append(existingMod.Parents, modMap[parent])
 			} else {
-				verMap[depName] = append(verMap[depName], newMod)
+				newMod := &Mod{
+					FullName:           dep,
+					Name:               depName,
+					Version:            depVersion,
+					IsDirectDependency: isDirectDependency,
+					Parents:            []*Mod{},
+				}
+				modMap[dep] = newMod
+				if !isDirectDependency {
+					newMod.Parents = append(newMod.Parents, modMap[parent])
+				}
+				if _, ok := verMap[depName]; !ok {
+					verMap[depName] = []*Mod{newMod}
+				} else {
+					verMap[depName] = append(verMap[depName], newMod)
+				}
 			}
 		}
-	}
 
-	_, modVersion := splitMod(mod)
+		_, modVersion := splitMod(&mod)
 
-	if modVersion != "" {
-		search(mod, &modMap)
-	} else {
-		if mods, ok := verMap[*mod]; ok {
-			for _, m := range mods {
-				search(&(m.FullName), &modMap)
+		if modVersion != "" {
+			// Search mod
+			search(&mod, &modMap)
+		} else {
+			if mods, ok := verMap[mod]; ok {
+				// Order mods
+				sort.Slice(mods, func(i, j int) bool {
+					return semver.Compare(mods[i].Version, mods[j].Version) < 0
+				})
+				// Search for each mod
+				for _, m := range mods {
+					search(&(m.FullName), &modMap)
+				}
+			} else {
+				fmt.Fprintf(os.Stdout, "%s\n", mod)
+				fmt.Fprintf(os.Stdout, "└── No direct dependency found\n\n")
 			}
 		}
 	}

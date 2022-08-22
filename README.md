@@ -5,7 +5,7 @@ Find go module direct, indirect and transitive dependencies.
 ## Installation
 
 ```bash
-go install github.com/francogeller/gomodsearch
+go install github.com/francogeller/gomodsearch@latest
 ```
 
 ## Usage
